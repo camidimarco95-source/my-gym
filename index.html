@@ -118,7 +118,11 @@ var CAT=[
 ['Sentadilla','piernas','l',0.55,2.5,0,1],['Prensa 45°','piernas','l',1.0,5,0,0],['Peso muerto rumano','piernas','l',0.50,2.5,0,1],
 ['Peso muerto','piernas','l',0.65,2.5,0,1],['Estocadas','piernas','l',0.12,1,0,0],['Sentadilla búlgara','glúteos','l',0.12,1,0,0],
 ['Hip thrust','glúteos','l',0.60,2.5,0,1],['Sillón de isquios','piernas','l',0.25,2.5,0,0],['Sillón de cuádriceps','piernas','l',0.30,2.5,0,0],
-['Abductores en máquina','glúteos','l',0.40,2.5,0,0],['Aductores en máquina','piernas','l',0.35,2.5,0,0],['Prensa 90°','piernas','l',0.80,5,0,0],
+['Abductores en máquina','glúteos','l',0.40,2.5,0,0],['Sentadilla en Smith','piernas','l',0.45,2.5,0,1],['Sentadilla búlgara en Smith','glúteos','l',0.30,2.5,0,0],
+['Prensa de piernas','piernas','l',0.80,5,0,0],['Prensa con pies altos','glúteos','l',0.80,5,0,0],['Hiperextensiones en banco romano','glúteos','l',0,2.5,1,0],
+['Extensión de cadera en multicadera','glúteos','l',0.20,2.5,0,0],['Curl femoral acostado','piernas','l',0.20,2.5,0,0],['Elevación de gemelos en escalón','piernas','l',0,2.5,1,0],
+['Press de hombros en máquina','hombros','u',0.20,2.5,0,0],['Mariposa inversa','hombros','u',0.15,2.5,0,0],['Mariposa (pec deck)','pecho','u',0.25,2.5,0,0],
+['Remo sentado en polea','espalda','u',0.35,2.5,0,0],['Remo horizontal en máquina','espalda','u',0.30,2.5,0,0],['Vuelo lateral en polea','hombros','u',0.03,1,0,0],['Vuelo lateral con mancuernas','hombros','u',0.05,1,0,0],['Aductores en máquina','piernas','l',0.35,2.5,0,0],['Prensa 90°','piernas','l',0.80,5,0,0],
 ['Patada sprinter','glúteos','l',0.08,1,0,0],['Patada de burro','glúteos','l',0.08,1,0,0],['Puente de glúteos','glúteos','l',0.40,2.5,0,0],
 ['Remo horizontal','espalda','u',0.30,2.5,0,0],['Face pull','hombros','u',0.10,2.5,0,0],['Vuelos laterales','hombros','u',0.05,1,0,0],['Vuelos frontales','hombros','u',0.04,1,0,0],['Curl de bíceps','brazos','u',0.10,1,0,0],
 ['Press de pecho en máquina','pecho','u',0.30,2.5,0,0],
@@ -195,7 +199,12 @@ var LEVELS=[['principiante','Principiante (menos de 1 año)',1],['intermedio','I
 function ex(n,s,r){return{name:n,sets:s,reps:r}}
 function upperDay(n,v){return{id:uid(),name:n,exercises:v===2?[ex('Jalón al pecho',3,'10-12'),ex('Remo horizontal',3,'10-12'),ex('Face pull',3,'12-15'),ex('Extensión de tríceps en polea',3,'10-12'),ex('Curl de bíceps',3,'10-12'),ex('Vuelos laterales',3,'12-15'),ex('Vuelos frontales',3,'12-15')]
  :[ex('Jalón al pecho',4,'10'),ex('Remo horizontal',3,'10'),ex('Press inclinado con mancuernas',3,'10'),ex('Face pull',3,'12-15'),ex('Extensión de tríceps en polea',4,'10'),ex('Curl de bíceps',4,'10'),ex('Vuelos laterales',3,'12-15'),ex('Vuelos frontales',2,'12-15')]}}
-function seedRoutines(v){return v===2?[
+function planDays(){return[
+ {id:uid(),name:'Sesión A',exercises:[ex('Hip thrust',4,'8-10'),ex('Press de pecho en máquina',4,'8-10'),ex('Sentadilla en Smith',4,'8-10'),ex('Jalón al pecho',3,'10'),ex('Sillón de cuádriceps',3,'10-12'),ex('Curl femoral acostado',3,'10-12'),ex('Press de hombros en máquina',3,'8-10'),ex('Abductores en máquina',3,'12-15'),ex('Vuelo lateral con mancuernas',3,'12-15')]},
+ {id:uid(),name:'Sesión B',exercises:[ex('Sentadilla búlgara en Smith',3,'8 c/u'),ex('Remo sentado en polea',3,'10-12'),ex('Prensa de piernas',4,'10-12'),ex('Sillón de cuádriceps',3,'10-12'),ex('Hiperextensiones en banco romano',3,'12'),ex('Curl con mancuernas',3,'10-12'),ex('Mariposa inversa',3,'12-15'),ex('Extensión de cadera en multicadera',3,'10 c/u'),ex('Extensión de tríceps en polea',3,'10-12')]},
+ {id:uid(),name:'Sesión C',exercises:[ex('Hip thrust',4,'8-10'),ex('Remo horizontal en máquina',3,'8-10'),ex('Prensa con pies altos',3,'10-12'),ex('Mariposa (pec deck)',4,'12'),ex('Sillón de isquios',3,'10-12'),ex('Vuelo lateral en polea',3,'12-15 c/u'),ex('Curl martillo',3,'12'),ex('Extensión de tríceps en polea',3,'12'),ex('Elevación de gemelos en escalón',3,'15')]}
+]}
+function seedRoutines(v){return v==='plan'?planDays():v===2?[
  upperDay('Día 1 · Tren superior',2),
  {id:uid(),name:'Día 2 · Piernas',exercises:[ex('Sentadilla',4,'8-10'),ex('Sillón de cuádriceps',3,'12'),ex('Sillón de isquios',3,'12'),ex('Abductores en máquina',3,'15'),ex('Aductores en máquina',3,'15'),ex('Prensa 90°',3,'10-12')]},
  upperDay('Día 3 · Tren superior',2),
@@ -223,8 +232,8 @@ function seedMeals(foods){
   ];
 }
 function load(){
-  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});if(!d.v||d.v<7){var have={};d.foods.forEach(function(f){have[norm(f.name)]=1});seedFoods().forEach(function(f){if(!have[norm(f.name)])d.foods.push(f)});var ov=d.v||0,sm=seedMeals(d.foods);if(!d.meals)d.meals=sm;else{d.meals=d.meals.filter(function(m){return m.name!=='Bife con papa y ensalada'&&m.name!=='Pollo con arroz y ensalada'});sm.forEach(function(m){if(m.ver>ov&&m.ver<=7)d.meals.push(m)})}d.v=7}return d}}}catch(e){}
-  var p=mkProfile('Yo');var fs=seedFoods();return{v:7,profiles:[p],cur:p.id,foods:fs,meals:seedMeals(fs)};
+  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});if(!d.v||d.v<8){var have={};d.foods.forEach(function(f){have[norm(f.name)]=1});seedFoods().forEach(function(f){if(!have[norm(f.name)])d.foods.push(f)});var ov=d.v||0,sm=seedMeals(d.foods);if(!d.meals)d.meals=sm;else{d.meals=d.meals.filter(function(m){return m.name!=='Bife con papa y ensalada'&&m.name!=='Pollo con arroz y ensalada'});sm.forEach(function(m){if(m.ver>ov&&m.ver<=7)d.meals.push(m)})}if(ov<8){var p0=d.profiles[0];if(p0&&(sig(p0.routines)===sig(seedRoutines())||sig(p0.routines)===sig(seedRoutines(2)))){p0.routines=seedRoutines('plan');p0.days=3}}d.v=8}return d}}}catch(e){}
+  var p=mkProfile('Yo');var fs=seedFoods();return{v:8,profiles:[p],cur:p.id,foods:fs,meals:seedMeals(fs)};
 }
 var S=load();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
