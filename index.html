@@ -218,13 +218,13 @@ function seedMeals(foods){
     mk('Tostada con palta y queso crema',[['Pan integral casero (rebanada)',1],['Palta',50],['Queso crema (cucharada)',1]]),
     mk('Yogur casero con cereales',[['Yogur casero (leche entera, sin azúcar)',170],['Cereales (cucharada)',2]]),
     mk('Rapidita con jamón y queso',[['Rapidita (1 unidad)',1],['Jamón cocido natural (feta)',1],['Queso cremoso',30]]),
-    mk('Bife con papa y ensalada',[['Bife mediano (≈150 g crudo)',1],['Papa mediana',1],['Ensalada mixta',150]],6),
-    mk('Pollo con arroz y ensalada',[['Pata de pollo sin piel (muslo y antemuslo)',1],['Arroz blanco cocido',150],['Ensalada mixta',150]],6)
+    mk('Bife con fideos y ensalada',[['Bife mediano (≈150 g crudo)',1],['Fideos secos (crudos)',50],['Ensalada mixta',150]],7),
+    mk('Pollo con verduras hervidas',[['Pata de pollo sin piel (muslo y antemuslo)',1],['Zapallo',100],['Zanahoria mediana',1],['Papa mediana',1]],7)
   ];
 }
 function load(){
-  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});if(!d.v||d.v<6){var have={};d.foods.forEach(function(f){have[norm(f.name)]=1});seedFoods().forEach(function(f){if(!have[norm(f.name)])d.foods.push(f)});var ov=d.v||0,sm=seedMeals(d.foods);if(!d.meals)d.meals=sm;else sm.forEach(function(m){if(m.ver>ov&&m.ver<=6)d.meals.push(m)});d.v=6}return d}}}catch(e){}
-  var p=mkProfile('Yo');var fs=seedFoods();return{v:6,profiles:[p],cur:p.id,foods:fs,meals:seedMeals(fs)};
+  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});if(!d.v||d.v<7){var have={};d.foods.forEach(function(f){have[norm(f.name)]=1});seedFoods().forEach(function(f){if(!have[norm(f.name)])d.foods.push(f)});var ov=d.v||0,sm=seedMeals(d.foods);if(!d.meals)d.meals=sm;else{d.meals=d.meals.filter(function(m){return m.name!=='Bife con papa y ensalada'&&m.name!=='Pollo con arroz y ensalada'});sm.forEach(function(m){if(m.ver>ov&&m.ver<=7)d.meals.push(m)})}d.v=7}return d}}}catch(e){}
+  var p=mkProfile('Yo');var fs=seedFoods();return{v:7,profiles:[p],cur:p.id,foods:fs,meals:seedMeals(fs)};
 }
 var S=load();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
