@@ -165,7 +165,16 @@ F('Brócoli','g',100,35,2.4,7,0.4,'veg','ac',150),
 F('Ensalada mixta','g',100,20,1,4,0.2,'veg','ac',150),
 F('Tomate','g',100,18,0.9,3.9,0.2,'veg','ac',100),
 F('Pizza de muzzarella (porción)','u',1,280,12,32,11,'prep','ac',2),
-F('Empanada de carne al horno','u',1,250,10,22,13,'prep','ac',2)
+F('Empanada de carne al horno','u',1,250,10,22,13,'prep','ac',2),
+F('Yogur casero (leche entera, sin azúcar)','g',100,61,3.5,4.7,3.3,'dairy','dms',170),
+F('Queso crema (cucharada)','u',1,51,0.9,0.6,5,'dairy','dm',1),
+F('Pan integral casero (rebanada)','u',1,100,4,18,1.5,'carb','dm',2),
+F('Naranja','u',1,62,1.2,15,0.2,'fruit','dms',1),
+F('Pera','u',1,100,0.6,27,0.2,'fruit','dms',1),
+F('Cereales (cucharada)','u',1,28,0.6,6,0.2,'carb','dm',2),
+F('Jamón cocido natural (feta)','u',1,22,3.4,0.3,0.8,'prot','dm',1),
+F('Rapidita (1 unidad)','u',1,105,3,19,2,'carb','dm',1),
+F('Mantequilla de maní (cucharadita)','u',1,30,1.3,1,2.5,'fat','dms',1)
 ]}
 var CATS=[['prot','Proteína'],['dairy','Lácteo'],['carb','Carbohidrato'],['fruit','Fruta'],['fat','Grasa'],['veg','Verdura'],['prep','Otro / preparado']];
 var CATMEALS={prot:'ac',dairy:'dm',carb:'ac',fruit:'dms',fat:'ac',veg:'ac',prep:'dams'};
@@ -192,11 +201,21 @@ function sig(rs){return JSON.stringify(rs.map(function(r){return r.name+'|'+r.ex
 function mkProfile(name){return{id:uid(),name:name,setup:false,sex:'f',age:28,height:165,weight:60,level:'principiante',act:1.55,goal:'musculo',days:4,
   manual:false,adj:0,tg:{kcal:2200,p:110,c:250,f:60},weights:[],routines:seedRoutines(),sessions:[],active:null,rest:90,log:{}}}
 
-function load(){
-  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});return d}}}catch(e){}
-  var p=mkProfile('Yo');return{profiles:[p],cur:p.id,foods:seedFoods()};
+function seedMeals(foods){
+  var by=function(n){return foods.filter(function(f){return f.name===n})[0]};
+  var mk=function(name,items){return{id:uid(),name:name,items:items.map(function(i){var e=entryFor(by(i[0]),i[1],'d');return{name:e.name,qty:e.qty,u:e.u,kcal:e.kcal,p:e.p,c:e.c,f:e.f}})}};
+  return [
+    mk('Pancake de banana y avena',[['Banana',1],['Huevo',1],['Avena',25],['Mantequilla de maní (cucharadita)',1]]),
+    mk('Tostada con palta y queso crema',[['Pan integral casero (rebanada)',1],['Palta',50],['Queso crema (cucharada)',1]]),
+    mk('Yogur casero con cereales',[['Yogur casero (leche entera, sin azúcar)',170],['Cereales (cucharada)',2]]),
+    mk('Rapidita con jamón y queso',[['Rapidita (1 unidad)',1],['Jamón cocido natural (feta)',1],['Queso cremoso',30]])
+  ];
 }
-var S=load();
+function load(){
+  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});if(!d.v||d.v<4){var have={};d.foods.forEach(function(f){have[norm(f.name)]=1});seedFoods().forEach(function(f){if(!have[norm(f.name)])d.foods.push(f)});if(!d.meals)d.meals=seedMeals(d.foods);d.v=4}return d}}}catch(e){}
+  var p=mkProfile('Yo');var fs=seedFoods();return{v:4,profiles:[p],cur:p.id,foods:fs,meals:seedMeals(fs)};
+}
+var S=load();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function P(){return S.profiles.filter(function(p){return p.id===S.cur})[0]||S.profiles[0]}
 
@@ -305,7 +324,7 @@ function warmup(ex,kg){
 }
 
 /* ---------- estado de pantalla ---------- */
-var view='hoy',day=dayKey(),pick=null,editing=null,backupOpen=false,progEx='',sugOff=0,curSugs=null,toastMsg='';
+var view='hoy',day=dayKey(),saveMeal=null,pick=null,editing=null,backupOpen=false,progEx='',sugOff=0,curSugs=null,toastMsg='';
 var restEnd=0,restTimer=null,wake=null;
 function toast(m){toastMsg=m;render();setTimeout(function(){toastMsg='';render()},2000)}
 
@@ -427,6 +446,8 @@ function foodListHtml(){
   if(!list.length)return '<p class="muted small">No hay resultados. Podés crear el alimento con el botón de arriba.</p>';
   return list.map(function(f){return '<button class="item" data-a="pick-food" data-id="'+f.id+'"><span>'+esc(f.name)+'</span><span class="small muted">'+fmtInt(f.kcal)+' kcal / '+(f.u==='u'?'1 u':f.amt+' '+f.u)+'</span></button>'}).join('');
 }
+function mealTotals(m){var t={kcal:0,p:0,c:0,f:0};m.items.forEach(function(i){t.kcal+=i.kcal;t.p+=i.p;t.c+=i.c;t.f+=i.f});return t}
+function pickTabs(){return '<div class="row"><button class="grow'+(pick.tab==='meals'?'':' primary')+'" data-a="pick-tab" data-id="foods">Alimentos</button><button class="grow'+(pick.tab==='meals'?' primary':'')+'" data-a="pick-tab" data-id="meals">Mis comidas</button></div>'}
 function pickHtml(){
   var h='<div class="card"><div class="row between"><h3>Agregar a '+mealName(pick.meal).toLowerCase()+'</h3><button class="ghost" data-a="pick-cancel">Cerrar</button></div>';
   if(pick.newFood){
@@ -444,8 +465,14 @@ function pickHtml(){
       +'<div class="col"><label class="label" for="qty">Cantidad ('+(f.u==='u'?'unidades':f.u)+')</label><input type="number" inputmode="decimal" id="qty" data-f="qty" value="'+esc(pick.qty)+'"></div>'
       +'<div class="hint" id="qprev"></div>'
       +'<div class="row"><button class="ghost danger" data-a="food-del" data-id="'+f.id+'">Quitar de mi lista</button><span class="grow"></span><button data-a="pick-back">Atrás</button><button class="primary" data-a="pick-add">Agregar</button></div>';
+  }else if(pick.tab==='meals'){
+    h+=pickTabs()+(S.meals.length?S.meals.map(function(m){var t=mealTotals(m);
+      return '<div class="sug"><div><strong>'+esc(m.name)+'</strong><div class="small muted">'+m.items.map(function(i){return qtyLabel(i.u,i.qty)+' '+esc(i.name.toLowerCase())}).join(' · ')+'</div></div>'
+        +'<div class="row between"><span class="small muted">'+fmtInt(t.kcal)+' kcal · '+fmtInt(t.p)+' g prot · '+fmtInt(t.c)+' g carbo · '+fmtInt(t.f)+' g grasa</span></div>'
+        +'<div class="row"><button class="ghost danger" data-a="meal-del" data-id="'+m.id+'">Borrar</button><span class="grow"></span><button class="primary" data-a="meal-add" data-id="'+m.id+'">Cargar</button></div></div>'}).join('')
+      :'<p class="muted small">Todavía no guardaste comidas. Cargá una y tocá “Guardar como comida”.</p>');
   }else{
-    h+='<input type="text" id="fsearch" data-f="search" placeholder="Buscar alimento" aria-label="Buscar alimento" value="'+esc(pick.q)+'" autocomplete="off">'
+    h+=pickTabs()+'<input type="text" id="fsearch" data-f="search" placeholder="Buscar alimento" aria-label="Buscar alimento" value="'+esc(pick.q)+'" autocomplete="off">'
       +'<button data-a="pick-new">+ Crear alimento nuevo</button><div class="list" id="foodlist">'+foodListHtml()+'</div>';
   }
   return h+'</div>';
@@ -460,12 +487,14 @@ function viewComida(){
   var h='<div class="row between"><button class="ghost" data-a="day" data-n="-1" aria-label="Día anterior">‹</button><div style="text-align:center"><div class="label">'+(day===dayKey()?'Hoy':'Registro')+'</div><h3>'+fmtDate(keyToDate(day))+'</h3></div><button class="ghost" data-a="day" data-n="1" aria-label="Día siguiente">›</button></div>';
   h+='<div class="card">'+barHtml('Calorías',d.kcal,t.kcal,'kcal',1)+barHtml('Proteína',d.p,t.p,'g',1)
     +'<div class="grid2">'+barHtml('Carbohidratos',d.c,t.c,'g')+barHtml('Grasas',d.f,t.f,'g')+'</div></div>';
+  if(!entries.length&&(p.log[shiftDay(day,-1)]||[]).length)h+='<button data-a="repeat">Copiar las comidas de ayer</button>';
   if(pick)h+=pickHtml();
   MEALS.forEach(function(m){
     var es=entries.filter(function(e){return e.meal===m[0]}),kc=es.reduce(function(n,e){return n+e.kcal},0);
     h+='<div class="card"><div class="row between"><h3>'+m[1]+'</h3><span class="small muted">'+(es.length?fmtInt(kc)+' kcal':'')+'</span></div>'
       +es.map(function(e){return '<div class="entry"><div><div>'+esc(e.name)+'</div><div class="small muted">'+qtyLabel(e.u,e.qty)+' · '+e.kcal+' kcal · '+fmt(e.p)+' g prot</div></div><button class="ghost danger" data-a="log-del" data-id="'+e.id+'" aria-label="Quitar">✕</button></div>'}).join('')
-      +'<button data-a="pick-open" data-m="'+m[0]+'">+ Agregar</button></div>';
+      +(saveMeal===m[0]&&es.length?'<div class="col"><input type="text" id="mealname" placeholder="Nombre (ej. Mi desayuno de siempre)" aria-label="Nombre de la comida"><div class="row"><button class="ghost" data-a="meal-save-cancel">Cancelar</button><span class="grow"></span><button class="primary" data-a="meal-save">Guardar</button></div></div>'
+        :'<div class="row"><button class="grow" data-a="pick-open" data-m="'+m[0]+'">+ Agregar</button>'+(es.length>1?'<button class="ghost" data-a="meal-save-open" data-m="'+m[0]+'">Guardar como comida</button>':'')+'</div>')+'</div>';
   });
   return h;
 }
@@ -651,7 +680,7 @@ document.addEventListener('click',function(ev){
     case 'sug-more':sugOff++;break;
     case 'sug-add':var sg=curSugs.list[i];sg.items.forEach(function(it){(p.log[dayKey()]=p.log[dayKey()]||[]).push(entryFor(it.food,it.qty,curSugs.slot))});save();render();toast('Cargado en '+mealName(curSugs.slot).toLowerCase());return;
     case 'day':day=shiftDay(day,+b.dataset.n);break;
-    case 'pick-open':pick={meal:b.dataset.m,q:'',sel:null,qty:'',newFood:false};break;
+    case 'pick-open':pick={meal:b.dataset.m,q:'',sel:null,qty:'',newFood:false,tab:'foods'};break;
     case 'pick-cancel':pick=null;break;
     case 'pick-back':pick.sel=null;break;
     case 'pick-new':pick.newFood=!pick.newFood;break;
@@ -665,6 +694,18 @@ document.addEventListener('click',function(ev){
       var cat=document.getElementById('nf-cat').value,nf=F(nm,document.getElementById('nf-u').value,g('amt'),g('kcal'),g('p'),g('c'),g('f'),cat,CATMEALS[cat],g('amt'));
       S.foods.push(nf);pick.newFood=false;pick.sel=nf.id;pick.qty=String(nf.def);toast('Alimento guardado');break;
     case 'food-del':if(b.dataset.sure){S.foods=S.foods.filter(function(x){return x.id!==id});pick.sel=null}else{b.dataset.sure=1;b.textContent='¿Seguro? Tocá otra vez';return}break;
+    case 'pick-tab':pick.tab=id;break;
+    case 'meal-add':var ml=S.meals.filter(function(x){return x.id===id})[0];if(!ml)return;var tg=(p.log[day]=p.log[day]||[]);
+      ml.items.forEach(function(i){tg.push({id:uid(),meal:pick.meal,name:i.name,qty:i.qty,u:i.u,kcal:i.kcal,p:i.p,c:i.c,f:i.f})});
+      var nm=ml.name;pick=null;save();render();toast('Cargado: '+nm);return;
+    case 'meal-del':if(b.dataset.sure){S.meals=S.meals.filter(function(x){return x.id!==id})}else{b.dataset.sure=1;b.textContent='¿Seguro?';return}break;
+    case 'meal-save-open':saveMeal=b.dataset.m;break;
+    case 'meal-save-cancel':saveMeal=null;break;
+    case 'meal-save':var mn=document.getElementById('mealname').value.trim(),src=(p.log[day]||[]).filter(function(e){return e.meal===saveMeal});
+      if(!mn||!src.length){toast('Poné un nombre para la comida');return}
+      S.meals.push({id:uid(),name:mn,items:src.map(function(e){return{name:e.name,qty:e.qty,u:e.u,kcal:e.kcal,p:e.p,c:e.c,f:e.f}})});saveMeal=null;save();render();toast('Comida guardada');return;
+    case 'repeat':var yk=shiftDay(day,-1),ys=(p.log[yk]||[]);(p.log[day]=p.log[day]||[]);
+      ys.forEach(function(e){p.log[day].push({id:uid(),meal:e.meal,name:e.name,qty:e.qty,u:e.u,kcal:e.kcal,p:e.p,c:e.c,f:e.f})});save();render();toast('Copiado de ayer');return;
     case 'log-del':p.log[day]=(p.log[day]||[]).filter(function(e){return e.id!==id});break;
     case 'start':startWorkout(id);return;
     case 'done':var st=p.active.items[i].sets[s];st.done=!st.done;if(st.done)startRest(p.rest);break;
@@ -691,7 +732,7 @@ document.addEventListener('click',function(ev){
     case 'backup':backupOpen=!backupOpen;break;
     case 'export':document.getElementById('bk').value=JSON.stringify(S);return;
     case 'copy':var ta=document.getElementById('bk');if(!ta.value)ta.value=JSON.stringify(S);ta.select();try{navigator.clipboard.writeText(ta.value).then(function(){toast('Copiado')},function(){})}catch(e){}return;
-    case 'import':try{var d=JSON.parse(document.getElementById('bk').value);if(!d||!Array.isArray(d.profiles)||!d.profiles.length||!Array.isArray(d.foods))throw 0;S=d;if(!S.cur)S.cur=S.profiles[0].id;save();render();toast('Datos restaurados')}catch(e){toast('El texto no es una copia válida')}return;
+    case 'import':try{var d=JSON.parse(document.getElementById('bk').value);if(!d||!Array.isArray(d.profiles)||!d.profiles.length||!Array.isArray(d.foods))throw 0;S=d;if(!S.cur)S.cur=S.profiles[0].id;if(!S.meals)S.meals=[];save();render();toast('Datos restaurados')}catch(e){toast('El texto no es una copia válida')}return;
   }
   save();render();
 });
