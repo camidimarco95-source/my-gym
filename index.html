@@ -577,7 +577,7 @@ function viewEntreno(){
         +'<div class="small muted">'+r.exercises.map(function(e){return esc(e.name)+' '+e.sets+'×'+esc(e.reps)}).join(' · ')+'</div><button class="ghost" data-a="edit" data-id="'+r.id+'" style="align-self:flex-start">Editar rutina</button></div>';
     }
   });
-  return h+'<button data-a="new-routine">+ Nueva rutina</button><p class="muted small">Tocá Editar rutina para cambiar ejercicios, series y repeticiones. Ahí te recomiendo ejercicios según lo que le falte a cada día. Al empezar, te sugiero el peso de cada uno.</p>';
+  return h+'<button data-a="new-routine">+ Nueva rutina</button><button class="ghost" data-a="load-plan">Cargar plan de 3 días (Sesión A, B y C)</button><p class="muted small">Tocá Editar rutina para cambiar ejercicios, series y repeticiones. Ahí te recomiendo ejercicios según lo que le falte a cada día. Al empezar, te sugiero el peso de cada uno.</p>';
 }
 
 /* ---------- vista: Progreso ---------- */
@@ -671,6 +671,7 @@ function viewPerfil(){
   h+='</div>';
   h+='<div class="card"><h3>Personas</h3><p class="small muted">Cada persona tiene sus propios datos, rutinas y comidas. La lista de alimentos es compartida.</p><div class="row wrap"><button data-a="add-profile">+ Agregar persona</button>'
     +(S.profiles.length>1?(window.__delp===p.id?'<button class="danger" data-a="del-profile">Tocá otra vez para borrar a '+esc(p.name)+'</button>':'<button class="ghost danger" data-a="del-profile">Borrar a '+esc(p.name)+'</button>'):'')+'</div></div>';
+  h+='<p class="small muted" style="text-align:center">Mi Gym · versión 10</p>';
   h+='<div class="card"><div class="row between"><div><h3>Copia de seguridad</h3><div class="muted small">Tus datos viven solo en este celu y navegador.</div></div><button data-a="backup">'+(backupOpen?'Cerrar':'Abrir')+'</button></div>';
   if(backupOpen)h+='<button data-a="export">Mostrar mis datos</button><textarea id="bk" aria-label="Datos en formato JSON" placeholder="Pegá acá una copia para restaurarla"></textarea><div class="row"><button data-a="copy">Copiar</button><button class="primary grow" data-a="import">Restaurar desde el texto</button></div><p class="muted small">Copiá el texto y guardalo en notas o mandátelo por mail. Para usar otro celu, pegalo ahí y tocá Restaurar.</p>';
   return h+'</div>';
@@ -738,6 +739,7 @@ document.addEventListener('click',function(ev){
     case 'rest-stop':stopRest();return;
     case 'edit':editing=id;break;
     case 'edit-done':editing=null;break;
+    case 'load-plan':if(b.dataset.sure){p.routines=seedRoutines('plan');p.days=3;editing=null;toast('Plan cargado')}else{b.dataset.sure=1;b.textContent='Reemplaza tus rutinas actuales. Tocá otra vez para confirmar';return}break;
     case 'new-routine':var nr={id:uid(),name:'Nueva rutina',exercises:[{name:'Press banca',sets:3,reps:'8-10'}]};p.routines.push(nr);editing=nr.id;break;
     case 'add-ex':r.exercises.push({name:'Sentadilla',sets:3,reps:'8-10'});break;
     case 'rec-add':var ce=CAT[i];r.exercises.push({name:ce[0],sets:ce[6]?4:3,reps:ce[6]?'8-10':'10-12'});break;
