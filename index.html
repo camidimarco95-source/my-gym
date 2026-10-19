@@ -175,7 +175,15 @@ F('Cereales (cucharada)','u',1,28,0.6,6,0.2,'carb','dm',2),
 F('Jamón cocido natural (feta)','u',1,22,3.4,0.3,0.8,'prot','dm',1),
 F('Rapidita (1 unidad)','u',1,105,3,19,2,'carb','dm',1),
 F('Mantequilla de maní (cucharadita)','u',1,30,1.3,1,2.5,'fat','dms',1),
-F('Leche proteica La Serenísima (taza 200 ml)','u',1,80,10,10,0,'dairy','dms',1)
+F('Leche proteica La Serenísima (taza 200 ml)','u',1,80,10,10,0,'dairy','dms',1),
+F('Fideos secos (crudos)','g',100,350,12,72,1.5,'carb','ac',50),
+F('Bife mediano (≈150 g crudo)','u',1,215,31,0,9,'prot','ac',1),
+F('Pata de pollo sin piel (muslo y antemuslo)','u',1,195,28,0,8,'prot','ac',1),
+F('Tarta de zucchini (porción)','u',1,240,9,20,14,'prep','ac',1),
+F('Papa mediana','u',1,130,3,30,0.2,'carb','ac',1),
+F('Zapallo','g',100,30,1,7,0.1,'veg','ac',100),
+F('Batata (1/2 mediana, ≈70 g)','u',1,63,1.4,14.7,0.1,'carb','ac',1),
+F('Zanahoria mediana','u',1,25,0.6,6,0.1,'veg','ac',1)
 ]}
 var CATS=[['prot','Proteína'],['dairy','Lácteo'],['carb','Carbohidrato'],['fruit','Fruta'],['fat','Grasa'],['veg','Verdura'],['prep','Otro / preparado']];
 var CATMEALS={prot:'ac',dairy:'dm',carb:'ac',fruit:'dms',fat:'ac',veg:'ac',prep:'dams'};
@@ -204,17 +212,19 @@ function mkProfile(name){return{id:uid(),name:name,setup:false,sex:'f',age:28,he
 
 function seedMeals(foods){
   var by=function(n){return foods.filter(function(f){return f.name===n})[0]};
-  var mk=function(name,items){return{id:uid(),name:name,items:items.map(function(i){var e=entryFor(by(i[0]),i[1],'d');return{name:e.name,qty:e.qty,u:e.u,kcal:e.kcal,p:e.p,c:e.c,f:e.f}})}};
+  var mk=function(name,items,ver){return{id:uid(),ver:ver||4,name:name,items:items.map(function(i){var e=entryFor(by(i[0]),i[1],'d');return{name:e.name,qty:e.qty,u:e.u,kcal:e.kcal,p:e.p,c:e.c,f:e.f}})}};
   return [
     mk('Pancake de banana y avena',[['Banana',1],['Huevo',1],['Avena',25],['Mantequilla de maní (cucharadita)',1]]),
     mk('Tostada con palta y queso crema',[['Pan integral casero (rebanada)',1],['Palta',50],['Queso crema (cucharada)',1]]),
     mk('Yogur casero con cereales',[['Yogur casero (leche entera, sin azúcar)',170],['Cereales (cucharada)',2]]),
-    mk('Rapidita con jamón y queso',[['Rapidita (1 unidad)',1],['Jamón cocido natural (feta)',1],['Queso cremoso',30]])
+    mk('Rapidita con jamón y queso',[['Rapidita (1 unidad)',1],['Jamón cocido natural (feta)',1],['Queso cremoso',30]]),
+    mk('Bife con papa y ensalada',[['Bife mediano (≈150 g crudo)',1],['Papa mediana',1],['Ensalada mixta',150]],6),
+    mk('Pollo con arroz y ensalada',[['Pata de pollo sin piel (muslo y antemuslo)',1],['Arroz blanco cocido',150],['Ensalada mixta',150]],6)
   ];
 }
 function load(){
-  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});if(!d.v||d.v<5){var have={};d.foods.forEach(function(f){have[norm(f.name)]=1});seedFoods().forEach(function(f){if(!have[norm(f.name)])d.foods.push(f)});if(!d.meals)d.meals=seedMeals(d.foods);d.v=5}return d}}}catch(e){}
-  var p=mkProfile('Yo');var fs=seedFoods();return{v:5,profiles:[p],cur:p.id,foods:fs,meals:seedMeals(fs)};
+  try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.profiles&&d.profiles.length&&d.foods){d.profiles.forEach(function(p){if(!p.routines.length)return;var old=p.routines.every(function(r){return /\(ejemplo\)/.test(r.name)})||sig(p.routines)===sig(seedRoutines(2));if(old)p.routines=seedRoutines()});if(!d.v||d.v<6){var have={};d.foods.forEach(function(f){have[norm(f.name)]=1});seedFoods().forEach(function(f){if(!have[norm(f.name)])d.foods.push(f)});var ov=d.v||0,sm=seedMeals(d.foods);if(!d.meals)d.meals=sm;else sm.forEach(function(m){if(m.ver>ov&&m.ver<=6)d.meals.push(m)});d.v=6}return d}}}catch(e){}
+  var p=mkProfile('Yo');var fs=seedFoods();return{v:6,profiles:[p],cur:p.id,foods:fs,meals:seedMeals(fs)};
 }
 var S=load();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
